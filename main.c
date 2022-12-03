@@ -28,8 +28,8 @@ int ball_width = 8;
 int ball_height = 8;
 
 /*Track the game state*/
-ball_launched = FALSE;
-game_on = FALSE;
+bool ball_launched = FALSE;
+bool game_on = FALSE;
 
 /*Score variables*/
 int score = 0;
@@ -141,7 +141,7 @@ void moveBall(){
 }
 
 /*The callback function that handles Joypad input*/
-void myJoyHandler( u16 joy, u16 changed, u16 state)
+static void myJoyHandler( u16 joy, u16 changed, u16 state)
 {
 	if (joy == JOY_1)
 	{
@@ -178,24 +178,24 @@ int main()
 
 	/*Set up the controller*/
 	JOY_init();
-	JOY_setEventHandler( &myJoyHandler );
+	JOY_setEventHandler( myJoyHandler );
 
 	/*Load and draw the background*/
 	VDP_loadBMPTileData(tile.image,1,1,1,1);
-	VDP_setPalette(PAL1, tile.palette->data);
-	VDP_fillTileMapRect(PLAN_A,TILE_ATTR_FULL(PAL1,0,FALSE,FALSE,1),0,0,40,30);
+	PAL_setPalette(PAL1, tile_pal.data,CPU);
+	VDP_fillTileMapRect(BG_A,TILE_ATTR_FULL(PAL1,0,FALSE,FALSE,1),0,0,40,30);
 
 	SYS_enableInts();
 
 	/*Draw the texts*/
-	VDP_setTextPlan(PLAN_B);/*Set the text plane to Plane B so texts are drawn above the tiles*/
+	VDP_setTextPlane(BG_B);/*Set the text plane to Plane B so texts are drawn above the tiles*/
 	VDP_drawText(label_score,1,1);
 	updateScoreDisplay();
 	showText(msg_start);
 	VDP_drawText("MEGAPONG",16,10);
 
 	/*Add the sprites for the player and ball*/
-	SPR_init(0,0,0);
+	SPR_init();
 	player = SPR_addSprite(&paddle, player_pos_x, player_pos_y, TILE_ATTR(PAL1, 0, FALSE, FALSE));
 	ball = SPR_addSprite(&imgball, ball_pos_x,ball_pos_y,TILE_ATTR(PAL1,0, FALSE, FALSE));
 	SPR_update();
@@ -209,7 +209,9 @@ int main()
 		}
 		
 		SPR_update();
-		VDP_waitVSync();
+		//VDP_waitVSync();
+    SYS_doVBlankProcess();
+
 	}
 
 	return(0);
